@@ -2,9 +2,14 @@ const express = require('express')
 const app = express()
 const morgan = require('morgan')
 const bodyParser = require('body-parser')
+const cors = require('cors')
 
+app.use(cors())
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
+/*Täydensin morganin logausta omalla 200ms ajastetulla console.logilla
+kun en saanut tehtyä morganin edistynyttä custom configurointia.
+Laitoin erroreihin lisäksi sopivia värejä.*/
 
 let persons = [
     {
@@ -23,6 +28,7 @@ let persons = [
 app.get('/api/persons', (req, res) => {
     res.json(persons)
 })
+
 //GET INFO
 app.get('/api/info', (req, res) => {
     res.send(`<p>Phonebook has info for ${persons.length} people<br> ${new Date()} <p>`)
@@ -34,8 +40,14 @@ app.get('/api/persons/:id', (request, response) => {
     const person = persons.find(person => person.id === id)
     if (person) {
         response.json(person)
+        setTimeout(function () {
+            console.log(person)
+        }, 200)
     } else {
-        response.status(404).end()
+        response.status(404).send()
+        setTimeout(function () {
+            console.log('id not found')
+        }, 200)
     }
 })
 
@@ -58,10 +70,22 @@ const generateId = () => {
 //ADD NEW PERSON
 app.post('/api/persons', (request, response) => {
     const body = request.body
+    const existingPerson = persons.find(person => person.name === body.name)
 
     if (!body.name || !body.phone) {
+        setTimeout(function () {
+            console.log('name or phone are missing')
+        }, 200)
         return response.status(400).json({
-            error: 'name or number or both are missing'
+            error: 'name or phone are missing'
+        })
+    }
+    else if (existingPerson) {
+        setTimeout(function () {
+            console.log('\x1b[33m%s\x1b[0m', 'Name already exists on database')
+        }, 200)
+        return response.status(405).json({
+            error: 'name already exists'
         })
     }
     else {
@@ -70,6 +94,9 @@ app.post('/api/persons', (request, response) => {
             phone: body.phone,
             id: generateId()
         }
+        setTimeout(function () {
+            console.log('Added person :', newPerson)
+        }, 200)
         persons = persons.concat(newPerson)
         response.json(newPerson)
     }
