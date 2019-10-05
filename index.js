@@ -44,7 +44,7 @@ app.get('/api/persons/:id', (request, response) => {
             console.log(person)
         }, 200)
     } else {
-        response.status(404).body('Didn´t find that person ID')
+        response.status(404)
     }
 })
 
