@@ -44,10 +44,7 @@ app.get('/api/persons/:id', (request, response) => {
             console.log(person)
         }, 200)
     } else {
-        response.status(404).send()
-        setTimeout(function () {
-            console.log('id not found')
-        }, 200)
+        response.status(404).body('Didn´t find that person ID')
     }
 })
 
