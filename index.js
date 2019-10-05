@@ -1,7 +1,9 @@
 const express = require('express')
 const app = express()
 const morgan = require('morgan')
+const bodyParser = require('body-parser')
 
+app.use(bodyParser.json())
 app.use(morgan('tiny'))
 
 let persons = [
@@ -21,9 +23,9 @@ let persons = [
 app.get('/api/persons', (req, res) => {
     res.json(persons)
 })
-
+//GET INFO
 app.get('/api/info', (req, res) => {
-    res.send('<h2>info</h2>')
+    res.send(`<p>Phonebook has info for ${persons.length} people<br> ${new Date()} <p>`)
 })
 
 //GET 1 PERSON
@@ -36,7 +38,16 @@ app.get('/api/persons/:id', (request, response) => {
         response.status(404).end()
     }
 })
-//GENERATE ADD FOR ADDING NEW PERSON
+
+//DELETE PERSON BY ID
+app.delete('/api/persons/:id', (request, response) => {
+    const id = Number(request.params.id)
+    persons = persons.filter(person => person.id !== id)
+
+    response.status(204).end()
+})
+
+//GENERATE ID FOR ADDING NEW PERSON
 const generateId = () => {
     const maxId = persons.length > 0
         ? Math.max(...persons.map(p => p.id))
@@ -45,7 +56,7 @@ const generateId = () => {
 }
 
 //ADD NEW PERSON
-app.post('/api/notes', (request, response) => {
+app.post('/api/persons', (request, response) => {
     const body = request.body
 
     if (!body.name || !body.phone) {
@@ -53,13 +64,15 @@ app.post('/api/notes', (request, response) => {
             error: 'name or number or both are missing'
         })
     }
-    const newPerson = {
-        name: body.name,
-        phone: body.phone,
-        id: generateId()
+    else {
+        const newPerson = {
+            name: body.name,
+            phone: body.phone,
+            id: generateId()
+        }
+        persons = persons.concat(newPerson)
+        response.json(newPerson)
     }
-    persons = persons.concat(newPerson)
-    response.json(newPerson)
 })
 
 const port = 3001
