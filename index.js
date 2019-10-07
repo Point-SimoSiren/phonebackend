@@ -7,20 +7,29 @@ const cors = require('cors')
 app.use(cors())
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
-/*Täydensin morganin logausta omalla 200ms ajastetulla console.logilla
-kun en saanut tehtyä morganin edistynyttä custom configurointia.
-Laitoin erroreihin lisäksi sopivia värejä.*/
+/*Täydensin morganin logausta omalla ajastetulla console.logilla
+kun en saanut tehtyä morganiin edistyneempää custom configurointia.*/
 
 let persons = [
     {
         id: 1,
-        name: "Tauno",
-        phone: "0509739955"
+        name: "Tauno Rasila",
+        number: "0509739955"
     },
     {
         id: 2,
-        name: "Mauno",
-        phone: "0509889957"
+        name: "Mauno Pasila",
+        number: "0509889957"
+    },
+    {
+        id: 3,
+        name: "Rauno Kassila",
+        number: "0509739955"
+    },
+    {
+        id: 4,
+        name: "Kauno Lassila",
+        number: "0509739955"
     }
 ]
 
@@ -31,12 +40,12 @@ app.get('/api/persons', (req, res) => {
 
 //GET INFO
 app.get('/api/info', (req, res) => {
-    res.send(`<p>Phonebook has info for ${persons.length} people<br> ${new Date()} <p>`)
+    res.send(`<p>numberbook has info for ${persons.length} people<br> ${new Date()} <p>`)
 })
 
 //GET 1 PERSON
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
+    const id = Number(request.params.id) //Number ei viittaa puh numeroon, vaan on funktio jossa id muutetaan numeraaliseksi arvoksi vastaamaan person.id:tä
     const person = persons.find(person => person.id === id)
     if (person) {
         response.json(person)
@@ -69,12 +78,12 @@ app.post('/api/persons', (request, response) => {
     const body = request.body
     const existingPerson = persons.find(person => person.name === body.name)
 
-    if (!body.name || !body.phone) {
+    if (!body.name || !body.number) {
         setTimeout(function () {
-            console.log('name or phone are missing')
+            console.log('name or number are missing')
         }, 200)
         return response.status(400).json({
-            error: 'name or phone are missing'
+            error: 'name or number are missing'
         })
     }
     else if (existingPerson) {
@@ -88,7 +97,7 @@ app.post('/api/persons', (request, response) => {
     else {
         const newPerson = {
             name: body.name,
-            phone: body.phone,
+            number: body.number,
             id: generateId()
         }
         setTimeout(function () {
