@@ -27,4 +27,5 @@ personSchema.set('toJSON', {
 })
 //Modelin luonti edellä luotua schemaa hyödyntäen
 const Person = mongoose.model('Person', personSchema)
+
 module.exports = mongoose.model('Person', personSchema)

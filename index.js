@@ -14,12 +14,10 @@ app.use(morgan('tiny'))
 /*Täydensin morganin logausta omalla ajastetulla console.logilla
 kun en saanut tehtyä morganiin edistyneempää custom configurointia.*/
 
-
-
 //GET ALL etsitään kaikki modelin Person ilmentymät.
 app.get('/api/persons', (req, res) => {
     Person.find({}).then(persons => {
-        res.json(persons.map(note => note.toJSON()))
+        res.json(persons.map(person => person.toJSON()))
     })
 })
 
@@ -51,46 +49,28 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 //GENERATE ID FOR ADDING NEW PERSON
-const generateId = () => {
+/* const generateId = () => {
     const maxId = persons.length > 0
         ? Math.max(...persons.map(p => p.id))
         : 0
     return maxId + 5
-}
+} */
+
 
 //ADD NEW PERSON
 app.post('/api/persons', (request, response) => {
     const body = request.body
-    const existingPerson = persons.find(person => person.name === body.name)
+    if (body.name === undefined || body.number === undefined) {
+        return response.status(400).json({ error: 'name or number is missing' })
+    }
 
-    if (!body.name || !body.number) {
-        setTimeout(function () {
-            console.log('name or number are missing')
-        }, 200)
-        return response.status(400).json({
-            error: 'name or number are missing'
-        })
-    }
-    else if (existingPerson) {
-        setTimeout(function () {
-            console.log('\x1b[33m%s\x1b[0m', 'Name already exists on database')
-        }, 200)
-        return response.status(405).json({
-            error: 'name already exists'
-        })
-    }
-    else {
-        const newPerson = {
-            name: body.name,
-            number: body.number,
-            id: generateId()
-        }
-        setTimeout(function () {
-            console.log('Added person :', newPerson)
-        }, 200)
-        persons = persons.concat(newPerson)
-        response.json(newPerson)
-    }
+    const person = new Person({
+        name: body.name,
+        number: body.number
+    })
+    person.save().then(savedPerson => {
+        response.json(savedPerson.toJSON())
+    })
 })
 
 const PORT = process.env.PORT
