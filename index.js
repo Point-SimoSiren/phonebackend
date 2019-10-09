@@ -1,8 +1,11 @@
+require('dotenv').config()
 const express = require('express')
-const app = express()
-const morgan = require('morgan')
 const bodyParser = require('body-parser')
+const morgan = require('morgan')
 const cors = require('cors')
+
+const app = express()
+const Person = require('./models/person')
 
 app.use(cors())
 app.use(bodyParser.json())
@@ -11,32 +14,13 @@ app.use(morgan('tiny'))
 /*Täydensin morganin logausta omalla ajastetulla console.logilla
 kun en saanut tehtyä morganiin edistyneempää custom configurointia.*/
 
-let persons = [
-    {
-        id: 1,
-        name: "Tauno Rasila",
-        number: "0509739955"
-    },
-    {
-        id: 2,
-        name: "Mauno Pasila",
-        number: "0509889957"
-    },
-    {
-        id: 3,
-        name: "Rauno Kassila",
-        number: "0509739955"
-    },
-    {
-        id: 4,
-        name: "Kauno Lassila",
-        number: "0509739955"
-    }
-]
 
-//GET ALL
+
+//GET ALL etsitään kaikki modelin Person ilmentymät.
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({}).then(persons => {
+        res.json(persons.map(note => note.toJSON()))
+    })
 })
 
 //GET INFO
@@ -109,6 +93,7 @@ app.post('/api/persons', (request, response) => {
     }
 })
 
-const port = process.env.PORT || 3001
-app.listen(port)
-console.log(`Server running on port ${port}`)
+const PORT = process.env.PORT
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+})
