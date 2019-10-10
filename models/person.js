@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+mongoose.set('useFindAndModify', false)
 
 const url = process.env.MONGODB_URI
 console.log('connecting to', url)
@@ -13,8 +14,18 @@ mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 
 //Scheman eli konstruktorin luonti
 const personSchema = new mongoose.Schema({
-    name: String,
-    number: String
+    name: {
+        type: String,
+        minlength: 2,
+        maxlength: 20,
+        required: true
+    },
+    number: {
+        type: String,
+        minlength: 5,
+        maxlength: 15,
+        required: true
+    }
 })
 //Muotoillaan kannasta haettavien olioiden toJSON -metodin asetuksia:
 //Poistetaan oliomuotoinen id ja versiomerkintä metodin tuotoksesta.

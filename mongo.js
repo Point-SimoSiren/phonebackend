@@ -1,4 +1,4 @@
-/* Tämän tiedostolla ansioista saa konsolikomennolla 'node mongo.js mongoAtlasKäyttäjäSalasana',
+/* Tämän tiedoston avulla saa konsolikomennolla 'node mongo.js mongoAtlasKäyttäjäSalasana',
 Haettua kannasta kaikki muistiinpanot konsoliin.
 Jos antaa lisäparametrina kaksi erillistä merkkijonoa, ne
 talletetaan kantaan uutena kontaktina ja palautetaan konsolille

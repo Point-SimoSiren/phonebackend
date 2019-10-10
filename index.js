@@ -7,12 +7,10 @@ const cors = require('cors')
 const app = express()
 const Person = require('./models/person')
 
-app.use(cors())
-app.use(bodyParser.json())
 app.use(express.static('build'))
+app.use(bodyParser.json())
+app.use(cors())
 app.use(morgan('tiny'))
-/*Täydensin morganin logausta omalla ajastetulla console.logilla
-kun en saanut tehtyä morganiin edistyneempää custom configurointia.*/
 
 //GET ALL etsitään kaikki modelin Person ilmentymät.
 app.get('/api/persons', (req, res) => {
@@ -23,56 +21,86 @@ app.get('/api/persons', (req, res) => {
 
 //GET INFO
 app.get('/api/info', (req, res) => {
-    res.send(`<p>numberbook has info for ${persons.length} people<br> ${new Date()} <p>`)
+    Person.find({}).then(persons => {
+        res.send(`<p style="font-size: 25">Phonebook has info for ${persons.length} people <br>
+        ${new Date()}</p>`)
+    })
 })
 
 //GET 1 PERSON
-app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id) //Number ei viittaa puh numeroon, vaan on funktio jossa id muutetaan numeraaliseksi arvoksi vastaamaan person.id:tä
-    const person = persons.find(person => person.id === id)
-    if (person) {
-        response.json(person)
-        setTimeout(function () {
-            console.log(person)
-        }, 200)
-    } else {
-        response.status(404).end()
-    }
+app.get('/api/persons/:id', (request, response, next) => {
+    Person.findById(request.params.id)
+        .then(person => {
+            if (person) {
+                response.json(person.toJSON())
+            } else {
+                //Jos tulee null arvo, eli id:tä ei löydy.
+                response.status(404).end()
+            }
+        })
+        //Jos id formaatti on väärä
+        .catch(error => {
+            console.log(error)
+            response.status(400).send({ error: 'wrong id format' })
+        })
 })
 
 //DELETE PERSON BY ID
-app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-
-    response.status(204).end()
+app.delete('/api/persons/:id', (request, response, next) => {
+    Person.findByIdAndRemove(request.params.id)
+        .then(result => {
+            response.status(204).end()
+        })
+        .catch(error => next(error))
 })
-
-//GENERATE ID FOR ADDING NEW PERSON
-/* const generateId = () => {
-    const maxId = persons.length > 0
-        ? Math.max(...persons.map(p => p.id))
-        : 0
-    return maxId + 5
-} */
-
 
 //ADD NEW PERSON
 app.post('/api/persons', (request, response) => {
     const body = request.body
-    if (body.name === undefined || body.number === undefined) {
-        return response.status(400).json({ error: 'name or number is missing' })
-    }
 
     const person = new Person({
         name: body.name,
-        number: body.number
+        number: body.number,
     })
     person.save().then(savedPerson => {
         response.json(savedPerson.toJSON())
     })
+        .catch(error => next(error))
 })
 
+//UPDATE PERSON 
+app.put('/api/persons/:id', (request, response, next) => {
+    const body = request.body
+
+    const person = {
+        name: body.name,
+        number: body.number,
+    }
+    Person.findByIdAndUpdate(request.params.id, person, { new: true })
+        .then(updatedperson => {
+            //console.log(updatedperson)
+            response.json(updatedperson.toJSON())
+        })
+        .catch(error => next(error))
+})
+
+//ERROR HANDLER MIDDLEWARE
+const errorHandler = (error, request, response, next) => {
+    console.error(error.message)
+
+    if (error.name === 'CastError' && error.kind == 'ObjectId') {
+        return response.status(400).send({ error: 'malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
+
+    }
+    next()
+
+}
+
+app.use(errorHandler)
+
+//PORT SETUP
 const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
