@@ -10,6 +10,7 @@ const Person = require('./models/person')
 app.use(express.static('build'))
 app.use(bodyParser.json())
 app.use(cors())
+
 app.use(morgan('tiny'))
 
 //GET INFO
