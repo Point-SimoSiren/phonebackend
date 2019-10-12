@@ -1,12 +1,13 @@
 const mongoose = require('mongoose')
 mongoose.set('useFindAndModify', false)
+var uniqueValidator = require('mongoose-unique-validator');
 
 const url = process.env.MONGODB_URI
-console.log('connecting to', url)
+console.log('connecting to Simos Mongo URL: ', url)
 
 mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(result => {
-        console.log('connected to MongoDB')
+        console.log('Connected to MongoDB')
     })
     .catch((error) => {
         console.log('error connecting to MongoDB:', error.message)
@@ -16,17 +17,20 @@ mongoose.connect(url, { useNewUrlParser: true, useUnifiedTopology: true })
 const personSchema = new mongoose.Schema({
     name: {
         type: String,
-        minlength: 2,
-        maxlength: 20,
-        required: true
+        minlength: 3,
+        maxlength: 30,
+        required: true,
+        unique: true
     },
     number: {
         type: String,
-        minlength: 5,
+        minlength: 8,
         maxlength: 15,
         required: true
     }
 })
+personSchema.plugin(uniqueValidator);
+
 //Muotoillaan kannasta haettavien olioiden toJSON -metodin asetuksia:
 //Poistetaan oliomuotoinen id ja versiomerkintä metodin tuotoksesta.
 personSchema.set('toJSON', {

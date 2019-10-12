@@ -12,13 +12,6 @@ app.use(bodyParser.json())
 app.use(cors())
 app.use(morgan('tiny'))
 
-//GET ALL etsitään kaikki modelin Person ilmentymät.
-app.get('/api/persons', (req, res) => {
-    Person.find({}).then(persons => {
-        res.json(persons.map(person => person.toJSON()))
-    })
-})
-
 //GET INFO
 app.get('/api/info', (req, res) => {
     Person.find({}).then(persons => {
@@ -27,8 +20,17 @@ app.get('/api/info', (req, res) => {
     })
 })
 
+
+//GET ALL etsitään kaikki modelin Person ilmentymät.
+app.get('/api/persons', (req, res) => {
+    Person.find({}).then(persons => {
+        res.json(persons.map(person => person.toJSON()))
+    })
+})
+
+
 //GET 1 PERSON
-app.get('/api/persons/:id', (request, response, next) => {
+app.get('/api/persons/:id', (request, response) => {
     Person.findById(request.params.id)
         .then(person => {
             if (person) {
@@ -38,21 +40,22 @@ app.get('/api/persons/:id', (request, response, next) => {
                 response.status(404).end()
             }
         })
-        //Jos id formaatti on väärä
-        .catch(error => {
-            console.log(error)
-            response.status(400).send({ error: 'wrong id format' })
-        })
+        .catch(error => next(error))
+
+    //response.status(400).send({ error: 'malformatted id' })
 })
+
 
 //DELETE PERSON BY ID
 app.delete('/api/persons/:id', (request, response, next) => {
     Person.findByIdAndRemove(request.params.id)
         .then(result => {
+            console.log('Deleted: ', result)
             response.status(204).end()
         })
         .catch(error => next(error))
 })
+
 
 //ADD NEW PERSON
 app.post('/api/persons', (request, response) => {
@@ -62,11 +65,16 @@ app.post('/api/persons', (request, response) => {
         name: body.name,
         number: body.number,
     })
-    person.save().then(savedPerson => {
-        response.json(savedPerson.toJSON())
-    })
+
+    person.save()
+        .then(savedPerson => savedPerson.toJSON())
+        .then(savedJsonPerson => {
+            response.json(savedJsonPerson)
+            console.log(savedJsonPerson)
+        })
         .catch(error => next(error))
 })
+
 
 //UPDATE PERSON 
 app.put('/api/persons/:id', (request, response, next) => {
@@ -74,31 +82,38 @@ app.put('/api/persons/:id', (request, response, next) => {
 
     const person = {
         name: body.name,
-        number: body.number,
+        number: body.number
     }
     Person.findByIdAndUpdate(request.params.id, person, { new: true })
-        .then(updatedperson => {
-            //console.log(updatedperson)
-            response.json(updatedperson.toJSON())
+        .then(updatedPerson => {
+            response.json(updatedPerson.toJSON())
         })
         .catch(error => next(error))
 })
 
-//ERROR HANDLER MIDDLEWARE
+
+// Olemattomien osoitteiden käsittely
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint: try ".com/" to use the app or ".com/info" for overall information of the phonebook.' })
+}
+app.use(unknownEndpoint)
+
+
+// ERROR KÄSITTELIJÄ MIDDLEWARE
 const errorHandler = (error, request, response, next) => {
     console.error(error.message)
 
     if (error.name === 'CastError' && error.kind == 'ObjectId') {
         return response.status(400).send({ error: 'malformatted id' })
+
     } else if (error.name === 'ValidationError') {
         return response.status(400).json({ error: error.message })
-
     }
-    next()
-
+    next(error)
 }
 
 app.use(errorHandler)
+
 
 //PORT SETUP
 const PORT = process.env.PORT
