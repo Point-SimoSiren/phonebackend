@@ -58,7 +58,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 
 
 //ADD NEW PERSON
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
     const body = request.body
 
     const person = new Person({
@@ -93,8 +93,8 @@ app.put('/api/persons/:id', (request, response, next) => {
 
 
 // Olemattomien osoitteiden käsittely
-const unknownEndpoint = (request, response) => {
-    response.status(404).send({ error: 'unknown endpoint: try ".com/" to use the app or ".com/info" for overall information of the phonebook.' })
+const unknownEndpoint = (request, response, next) => {
+    response.status(404).send({ error: 'unknown endpoint. Remove all extra characters from the address above after herokuapp.com' })
 }
 app.use(unknownEndpoint)
 
